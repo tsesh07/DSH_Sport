@@ -7,3 +7,4 @@ plotly
 numpy
 scikit-learn
 geopandas
+pybikeride
