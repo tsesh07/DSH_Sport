@@ -1,0 +1,4 @@
+# Negeer alle bestanden in de data mappen
+data_hackathon_mrt2026/
+*.gpx
+*.fit
