@@ -65,7 +65,7 @@ with col3:
 # 5. TABBLADEN
 st.divider()
 
-tab6, tab1, tab2, tab3, tab4, tab5 = st.tabs(["🗺️ Route Kaart","📈 Snelheid & Volume", "🫀 Fysieke Efficiëntie", "🏆 Leaderboard & Gedrag", "🤖 AI Voorspellingen", "📈 Conditiegroei"])
+tab6, tab1, tab2, tab3, tab4, tab5 = st.tabs(["🗺️ Route Kaart","📈 Snelheid & Volume", "🫀 Fysieke Efficiëntie", "🏆 Leaderboard & Gedrag", "🤖 Prestatie Voorspellingen", "📈 Conditiegroei"])
 
 # TAB 1: Snelheid & Kilometervreters
 with tab1:
@@ -177,64 +177,121 @@ with tab3:
         
         st.dataframe(records, use_container_width=True, hide_index=True)
         
-# TAB 4: AI & Machine Learning (Random Forest)
+# ------------------------------------------
+# TAB 4: AI Voorspellingen (Random Forest)
+# ------------------------------------------
+from sklearn.ensemble import RandomForestRegressor
+import plotly.graph_objects as go
+
 with tab4:
-    st.markdown("### 🔮 Random Forest Predictor")
-    st.write("We hebben live een Random Forest Machine Learning model getraind op jullie data. Vul hieronder een geplande rit in, en de AI voorspelt de gemiddelde snelheid!")
-    
-    # 1. Data voorbereiden voor het model
-    df_ml = df_filtered.dropna(subset=['Gem_Snelheid_kmu', 'Afstand_km', 'Datum']).copy()
-    
-    if len(df_ml) > 10: # Het model heeft data nodig om van te leren
-        
-        # Feature Engineering: We maken een variabele "Conditie". 
-        # Hoe meer dagen sinds de eerste rit, hoe meer getraind de sporter is.
-        datum_min = df_ml['Datum'].min()
-        df_ml['Dagen_sinds_start'] = (pd.to_datetime(df_ml['Datum']) - pd.to_datetime(datum_min)).dt.days
-        
-        # encoding van namen naar numericals
-        df_ml_encoded = pd.get_dummies(df_ml, columns=['Docent'])
-        
-        features = ['Afstand_km', 'Dagen_sinds_start'] + [col for col in df_ml_encoded.columns if col.startswith('Docent_')]
-        X = df_ml_encoded[features]
-        y = df_ml_encoded['Gem_Snelheid_kmu'] 
-        
-        rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
-        rf_model.fit(X, y)
-        
-        st.divider()
-        
-        # Interactieve Voorspeller (User Interface)
-        col_links, col_rechts = st.columns(2)
-        
-        with col_links:
-            input_docent = st.selectbox("Wie gaat er fietsen?", options=df_filtered['Docent'].unique())
-            input_afstand = st.slider("Geplande Afstand (km)", min_value=5.0, max_value=250.0, value=60.0, step=5.0)
-            
-            vandaag = datetime.date.today()
-            dagen_nu = (pd.to_datetime(vandaag) - pd.to_datetime(datum_min)).days
-            
-        with col_rechts:
-            input_data = pd.DataFrame(columns=X.columns)
-            input_data.loc[0] = 0 # Zet alles standaard op 0
-            
-            input_data['Afstand_km'] = input_afstand
-            input_data['Dagen_sinds_start'] = dagen_nu
-            
-            docent_kolom = f'Docent_{input_docent}'
-            if docent_kolom in input_data.columns:
-                input_data[docent_kolom] = 1
-                
-            voorspelling = rf_model.predict(input_data)[0]
-            
-            st.markdown(f"#### 🎯 Verwachte Snelheid:")
-            st.metric(label="", value=f"{voorspelling:.1f} km/u")
-            
-            st.info(f"💡 **Hoe werkt dit?** Het AI-model kijkt naar historische ritten rond de {input_afstand} km van {input_docent}, neemt de actuele opgebouwde conditie mee, en vergelijkt dit met patronen van de andere rijders.")
+    st.markdown("### 🤖 AI Voorspellingen: Toekomstige sportprestaties")
+    st.write("Pas de sliders aan om een toekomstige sportprestatie te voorspellen op basis van Machine Learning.")
 
+    # 1. Data voorbereiden voor het model (gebaseerd op je actieve filters!)
+    df_ml = df_filtered.copy()
+    
+    # We voegen de maand toe als extra variabele
+    df_ml['Maand'] = pd.to_datetime(df_ml['Datum']).dt.month
+    
+    # Vul lege hartslagen in met het gemiddelde van die specifieke docent
+    df_ml['Gem_Hartslag'] = df_ml.groupby('Docent')['Gem_Hartslag'].transform(lambda x: x.fillna(x.mean()))
+    df_ml = df_ml.dropna(subset=['Gem_Hartslag', 'Gem_Snelheid_kmu'])
+
+    if not df_ml.empty:
+        # 2. MODEL TRAINING (Gecached zodat hij niet bij elke klik traag wordt)
+        @st.cache_resource
+        def train_rf_model(data):
+            df_encoded = pd.get_dummies(data, columns=['Docent'], prefix='Coach')
+            coach_cols = [c for c in df_encoded.columns if c.startswith('Coach_')]
+            features = ['Afstand_km', 'Gem_Hartslag', 'Maand'] + coach_cols
+            
+            X = df_encoded[features]
+            y = df_encoded['Gem_Snelheid_kmu']
+            
+            model = RandomForestRegressor(n_estimators=100, random_state=42)
+            model.fit(X, y)
+            return model, features
+
+        model, feature_names = train_rf_model(df_ml)
+
+        # 3. DASHBOARD LAYOUT (Precies zoals je groepsgenoot het had bedacht)
+        col_ml_links, col_ml_rechts = st.columns([1, 3])
+
+        with col_ml_links:
+            st.subheader("⚙️ Instellingen")
+            
+            # Sliders en Selectbox
+            naam = st.selectbox("Wie gaat er sporten?", df_ml['Docent'].unique())
+            
+            # Afstand slider gebaseerd op max uit de dataset
+            afstand = st.slider("Afstand (km)", 
+                                min_value=0.0, 
+                                max_value=float(df_ml['Afstand_km'].max()), 
+                                value=30.0)
+            
+            maand = st.slider("Maand van het jaar", 1, 12, 6)
+
+            # Berekening voorbereiden
+            input_row = pd.DataFrame(0, index=[0], columns=feature_names)
+            input_row['Afstand_km'] = afstand
+            input_row['Maand'] = maand
+            
+            # Pak de gemiddelde hartslag van deze sporter
+            gem_hr = df_ml[df_ml['Docent'] == naam]['Gem_Hartslag'].mean()
+            input_row['Gem_Hartslag'] = gem_hr
+            
+            # Zet het vinkje (de 1) bij de juiste docent in de onzichtbare wiskunde
+            coach_col = f'Coach_{naam}'
+            if coach_col in feature_names:
+                input_row[coach_col] = 1
+            
+            # De voorspelling!
+            snelheid_pred = model.predict(input_row)[0]
+            
+            st.write("---")
+            st.metric(label="🎯 Voorspelde Snelheid", value=f"{snelheid_pred:.2f} km/u")
+            st.caption(f"Gebaseerd op een geschatte hartslag van {gem_hr:.0f} bpm.")
+
+        with col_ml_rechts:
+            # Maak de Plotly grafiek
+            subset = df_ml[df_ml['Docent'] == naam].sort_values('Datum')
+            
+            fig_rf = px.scatter(
+                subset, x='Afstand_km', y='Gem_Snelheid_kmu', 
+                title=f"Historische Prestaties vs. Voorspelling: {naam}",
+                labels={'Gem_Snelheid_kmu': 'Snelheid (km/u)', 'Afstand_km': 'Afstand (km)'},
+                opacity=0.6,
+                render_mode='svg'
+            )
+            
+            # Maak de bolletjes van de historie lekker dik
+            fig_rf.update_traces(marker=dict(size=10, color='#636EFA'))
+
+            # 🔥 DE RODE STER VAN JE GROEPSGENOOT 🔥
+            fig_rf.add_trace(go.Scatter(
+                x=[afstand], 
+                y=[snelheid_pred],
+                mode='markers+text',
+                name='Voorspelling',
+                text=["VOORSPELLING"],
+                textposition="top center",
+                marker=dict(color='Red', size=20, symbol='star', line=dict(width=2, color='white'))
+            ))
+
+            # Update layout voor een strakker uiterlijk in het dashboard
+            fig_rf.update_layout(
+                margin=dict(l=20, r=20, t=50, b=20),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            )
+
+            st.plotly_chart(fig_rf, use_container_width=True)
+
+        # Tabel met ruwe data (Expander)
+        with st.expander(f"Bekijk de volledige trainingsdata van {naam}"):
+            st.dataframe(subset[['Datum', 'Afstand_km', 'Gem_Snelheid_kmu', 'Gem_Hartslag']], use_container_width=True)
+            
     else:
-        st.warning("Te weinig ritten geselecteerd om de AI te trainen. Kies meer sporters in het filter!")
-
+        st.warning("⚠️ Er is niet genoeg data beschikbaar om het model te trainen. Controleer de filters in de zijbalk.")
 # ------------------------------------------
 # TAB 5: Conditiegroei (Lineaire Regressie)
 # ------------------------------------------
