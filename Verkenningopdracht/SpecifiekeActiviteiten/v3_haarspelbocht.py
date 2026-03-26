@@ -5,7 +5,7 @@ import folium
 from bikeride import BikeRide
 
 
-# 1. DATA INLADEN 
+# DATA INLADEN 
 
 script_map = os.path.dirname(os.path.abspath(__file__))
 base_data_map = os.path.join(script_map, '..', '..', 'data_hackathon_mrt2026')
@@ -50,7 +50,7 @@ df['bearing_out'] = bereken_bearing(df['lat'], df['lon'], df['lat'].shift(-windo
 verschil = abs(df['bearing_out'] - df['bearing_in'])
 df['richting_verschil'] = np.where(verschil > 180, 360 - verschil, verschil)
 
-# 3. DE BOCHT VINDEN & DEBUGGEN
+# DE BOCHT VINDEN & DEBUGGEN
 max_gemeten_hoek = df['richting_verschil'].max()
 print(f"🔍 Debug Info: De aller-scherpste hoek in deze dataset is {max_gemeten_hoek:.1f} graden.")
 
@@ -58,7 +58,7 @@ haarspeld_punten = df[df['richting_verschil'] > 130].copy()
 
 print(f"Er zijn {len(haarspeld_punten)} GPS-punten gedetecteerd die in de haarspeldbocht liggen.")
 
-# 4. OP DE KAART PLOTTEN
+# OP DE KAART PLOTTEN
 print("Kaart genereren...")
 
 start_lat, start_lon = df['lat'].iloc[0], df['lon'].iloc[0]
