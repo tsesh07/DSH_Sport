@@ -184,7 +184,7 @@ from sklearn.ensemble import RandomForestRegressor
 import plotly.graph_objects as go
 
 with tab4:
-    st.markdown("### 🤖 AI Voorspellingen: Toekomstige sportprestaties")
+    st.markdown("### Toekomstige sportprestaties")
     st.write("Pas de sliders aan om een toekomstige sportprestatie te voorspellen op basis van Machine Learning.")
 
     # 1. Data voorbereiden voor het model (gebaseerd op je actieve filters!)
