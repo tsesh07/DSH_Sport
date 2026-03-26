@@ -61,54 +61,13 @@ with col3:
     aantal_ritten = len(df_filtered)
     st.metric("Aantal Ritten", f"{aantal_ritten}")
     
-st.divider()
-st.subheader("🌍 Waar wordt er gefietst?")
-
-#4.5 DE GROTE OVERZICHTSKAART
-# Laad de GPS data in via het cache-geheugen
-@st.cache_data
-def load_gps_data():
-    try:
-        return pd.read_csv('gps_trajecten.csv', sep=';')
-    except:
-        return pd.DataFrame()
-
-df_gps = load_gps_data()
-
-if not df_gps.empty:
-    # Koppel de GPS-data aan de docenten in het filter
-    df_gps_merged = pd.merge(df_gps, df_filtered[['Bestand', 'Docent']], on='Bestand', how='inner')
-    
-    if not df_gps_merged.empty:
-        # Random Sampling voor een razendsnelle kaart
-        df_overzicht = df_gps_merged.copy()
-        if len(df_overzicht) > 15000:
-            df_overzicht = df_overzicht.sample(n=15000, random_state=42)
-        
-        # Teken de wereldkaart over de volle breedte
-        fig_all = px.scatter_mapbox(
-            df_overzicht, lat="lat", lon="lon", color="Docent",
-            zoom=6, mapbox_style="carto-darkmatter"
-        )
-        
-        fig_all.update_traces(marker=dict(size=3, opacity=0.5))
-        # Maak hem lekker hoog (600px) en haal de titel weg (die staat al in st.subheader)
-        fig_all.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, height=600)
-        
-        st.plotly_chart(fig_all, use_container_width=True)
-    else:
-        st.info("Geen GPS data beschikbaar voor de geselecteerde sporters.")
-else:
-    st.warning("⚠️ Let op: gps_trajecten.csv is niet gevonden.")
 
 # 5. TABBLADEN
 st.divider()
 
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📈 Snelheid & Volume", "🫀 Fysieke Efficiëntie", "🏆 Leaderboard & Gedrag", "🤖 AI Voorspellingen", "📈 Conditiegroei", "🗺️ Koninginnerit (Kaart)"])
+tab6, tab1, tab2, tab3, tab4, tab5 = st.tabs(["🗺️ Route Kaart","📈 Snelheid & Volume", "🫀 Fysieke Efficiëntie", "🏆 Leaderboard & Gedrag", "🤖 AI Voorspellingen", "📈 Conditiegroei"])
+
 # TAB 1: Snelheid & Kilometervreters
-# ------------------------------------------
-# TAB 1: Snelheid & Kilometervreters (GESPLITST!)
-# ------------------------------------------
 with tab1:
     col_links, col_rechts = st.columns(2)
     
@@ -351,15 +310,10 @@ with tab5:
     else:
         st.warning("Geen hartslagdata gevonden om conditiegroei te berekenen. Zet de filters in de zijbalk aan!")
         
-# ------------------------------------------
-# TAB 6: De Koninginnerit (Kaart & Telemetrie)
-# ------------------------------------------
-# ------------------------------------------
-# TAB 6: GPS Telemetrie (Heatmap & Koninginnerit)
-# ------------------------------------------
+
+# TAB 6: Waar wordt er gefietst
 with tab6:
-    st.markdown("### 🗺️ GPS Telemetrie: Het Territorium")
-    
+    st.markdown("### 🗺️ GPS Telemetrie: Waar wordt er gefietst?")
     # Laad de GPS data in via het cache-geheugen
     @st.cache_data
     def load_gps_data():
@@ -371,12 +325,9 @@ with tab6:
     df_gps = load_gps_data()
     
     if not df_gps.empty:
-        # DATA SCIENCE TRUC: Koppel de GPS-data aan de gefilterde docenten!
-        # Zo krijgt elk GPS-puntje ineens de naam van de Docent erbij.
         df_gps_merged = pd.merge(df_gps, df_filtered[['Bestand', 'Docent']], on='Bestand', how='inner')
         
         if not df_gps_merged.empty:
-            # Maak een strakke schakelaar boven de kaart
             kaart_modus = st.radio(
                 "Kies de kaartweergave:", 
                 ["🌍 Alle Routes (Wie fietst waar?)", "📍 Specifieke Rit Analyseren (Snelheidskaart)"], 
@@ -386,17 +337,12 @@ with tab6:
             st.divider()
             
             if kaart_modus == "🌍 Alle Routes (Wie fietst waar?)":
-                st.write("Hier zie je het 'jachtgebied' van alle geselecteerde sporters. (Geoptimaliseerd voor snelheid!)")
+                st.write("Hier zie je het 'fietsgebied' van alle geselecteerde sporters. (Geoptimaliseerd voor snelheid!)")
                 
-                # 🔥 DATA SCIENCE TRUC: RANDOM SAMPLING
-                # Als er meer dan 15.000 GPS punten zijn, pakken we een willekeurige 
-                # steekproef van 15.000 stuks. Dit maakt de kaart razendsnel, 
-                # terwijl de "vorm" van het territorium exact hetzelfde blijft!
                 df_overzicht = df_gps_merged.copy()
                 if len(df_overzicht) > 15000:
                     df_overzicht = df_overzicht.sample(n=15000, random_state=42)
                 
-                # We gebruiken nu de snellere df_overzicht in plaats van de volledige set
                 fig_all = px.scatter_mapbox(
                     df_overzicht, lat="lat", lon="lon", color="Docent",
                     zoom=7, mapbox_style="carto-darkmatter",
@@ -406,14 +352,13 @@ with tab6:
                 fig_all.update_traces(marker=dict(size=3, opacity=0.5))
                 fig_all.update_layout(
                     margin={"r":0,"t":40,"l":0,"b":0},
-                    height=700  
+                    height=1500,
+                    width=1500  
                 )
                 
                 st.plotly_chart(fig_all, use_container_width=True)
                 
-            # ==========================================
-            # MODUS 2: DE KONINGINNERIT (1 RIT)
-            # ==========================================
+            # MODUS 2: 1 RIT OP DE KAART
             else:
                 st.write("Kies hieronder een specifieke rit om deze op de kaart te tekenen. De kleur geeft de snelheid aan!")
                 col_links, col_rechts = st.columns([1, 2])
