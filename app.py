@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
 import datetime
 
 
@@ -292,20 +293,20 @@ with tab4:
             
     else:
         st.warning("⚠️ Er is niet genoeg data beschikbaar om het model te trainen. Controleer de filters in de zijbalk.")
-# ------------------------------------------
+
 # TAB 5: Conditiegroei (Lineaire Regressie)
-# ------------------------------------------
 from sklearn.linear_model import LinearRegression
+import plotly.colors as pc
 
 with tab5:
-    st.markdown("### 🫀📈 Conditiegroei: Wordt de motor groter?")
+    st.markdown("### 🫀📈 Conditiegroei: Is er nog groei mogelijk?")
     st.write("We berekenen de **Efficiëntie-score** (Snelheid gedeeld door Hartslag). Een stijgende lijn betekent dat je harder fietst met minder moeite. Met een *Lineair Regressie Model* berekenen we het exacte groeipercentage over tijd!")
 
     # 1. Haal alle ritten zonder hartslag eruit
     df_conditie = df_filtered.dropna(subset=['Gem_Snelheid_kmu', 'Gem_Hartslag', 'Datum']).copy()
 
     if not df_conditie.empty:
-        # 2. BEREKEN DE EFFICIËNTIE (Hoe hoger, hoe beter)
+        # BEREKEN DE EFFICIËNTIE (Hoe hoger, hoe beter)
         df_conditie['Efficientie'] = df_conditie['Gem_Snelheid_kmu'] / df_conditie['Gem_Hartslag']
         
         # Bereken dagen sinds eerste rit (voor de X-as van het wiskundige model)
@@ -318,21 +319,24 @@ with tab5:
         docenten_met_hartslag = df_conditie['Docent'].unique()
         kolommen = st.columns(len(docenten_met_hartslag))
         
-        # Basis grafiek met de losse puntjes
+        # 🔥 DE FIX: Maak een vast kleurenpalet aan voor deze sporters!
+        standaard_kleuren = pc.qualitative.Plotly # Plotly's standaard mooie kleuren
+        kleuren_map = {docent: standaard_kleuren[i % len(standaard_kleuren)] for i, docent in enumerate(docenten_met_hartslag)}
+
+        # Basis grafiek met de losse puntjes (nu geforceerd met onze kleuren_map)
         fig_reg = px.scatter(
             df_conditie, x='Datum', y='Efficientie', color='Docent', 
+            color_discrete_map=kleuren_map, # <-- Gebruik het vaste palet
             hover_data=['Gem_Snelheid_kmu', 'Gem_Hartslag'],
             title="Cardiovasculaire Ontwikkeling over Tijd",
             render_mode='svg'
         )
         
-        fig_reg.update_traces(marker=dict(size=21, opacity=0.6, line=dict(width=1.5, color='DarkSlateGrey')))
+        fig_reg.update_traces(marker=dict(size=17, opacity=0.6, line=dict(width=1.5, color='DarkSlateGrey')))
 
-        # 3. TRAIN HET MODEL PER DOCENT
         for i, docent in enumerate(docenten_met_hartslag):
             df_docent = df_conditie[df_conditie['Docent'] == docent].sort_values('Dagen')
             
-            # Een lineaire lijn trekken kan pas vanaf minimaal 3 ritten
             if len(df_docent) > 3: 
                 X = df_docent[['Dagen']]
                 y = df_docent['Efficientie']
@@ -354,31 +358,27 @@ with tab5:
                 fig_reg.add_scatter(
                     x=df_docent['Datum'], y=df_docent['Trendlijn'], 
                     mode='lines', name=f"Trend {docent}", 
-                    # VISUELE UPGRADE 2: Maak de trendlijn lekker dik en opvallend
-                    line=dict(dash='dash', width=4) 
+                    line=dict(dash='dash', width=6, color=kleuren_map[docent]) 
                 )
                 
-                # Toon het groeipercentage mooi in de app
                 with kolommen[i]:
                     st.metric(label=f"{docent}", value=f"{groei_pct:+.1f}%", delta="Efficiëntie")
             else:
                 with kolommen[i]:
                     st.metric(label=f"{docent}", value="Te weinig data")
 
-        # Bepaal het absolute minimum en maximum van de data
+        # Bepaal het absolute minimum en maximum van de data voor strakke Y-as
         min_y = df_conditie['Efficientie'].min() * 0.90
         max_y = df_conditie['Efficientie'].max() * 1.10
         
         fig_reg.update_layout(
-            height=800, 
-            width =1200,
+            height=600, 
             yaxis_range=[min_y, max_y], 
             yaxis_title="Efficiëntie Score (Snelheid / Hartslag)",
             xaxis_title="Datum",
-            hovermode="x unified" 
+            hovermode="x unified"
         )
 
-        # Laat de complete grafiek zien
         st.plotly_chart(fig_reg, use_container_width=True)
         
         st.info("💡 **Hoe lees je dit?** Een score van 0.20 betekent dat je voor elke hartslag per minuut, exact 0.20 km/u fietst. Hoe hoger de gestippelde trendlijn eindigt, hoe fitter de sporter fysiologisch is geworden!")
