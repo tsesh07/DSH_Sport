@@ -19,7 +19,7 @@ if os.path.exists(pad_robin):
 elif os.path.exists(pad_pieter):
     file_path = pad_pieter
 else:
-    print(f"❌ Kan {bestandsnaam} niet vinden in de data mappen!")
+    print(f"Kan {bestandsnaam} niet vinden in de data mappen!")
     exit()
 
 print(f"🚴‍♂️ Triatlon inladen vanuit:\n   {os.path.abspath(file_path)}...")
@@ -27,9 +27,9 @@ print(f"🚴‍♂️ Triatlon inladen vanuit:\n   {os.path.abspath(file_path)}.
 try:
     ride = BikeRide(os.path.abspath(file_path))
     df = pd.DataFrame(ride.records)[['timestamp', 'lat', 'lon']].dropna().reset_index(drop=True)
-    print(f"✅ Route geladen met {len(df)} datapunten!")
+    print(f"Route geladen met {len(df)} datapunten!")
 except Exception as e:
-    print(f"❌ Fout bij inladen: {e}")
+    print(f"Fout bij inladen: {e}")
     exit()
 
 def bereken_bearing(lat1, lon1, lat2, lon2):
@@ -80,4 +80,4 @@ for index, row in haarspeld_punten.iterrows():
 html_bestand = os.path.join(script_map, "haarspeldbocht_kaart.html")
 route_kaart.save(html_bestand)
 
-print(f"Klaar! Open deze in je browser:\n   👉 {html_bestand}")
+print(f"Klaar! Open deze in je browser:\n   {html_bestand}")

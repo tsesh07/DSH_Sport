@@ -35,11 +35,11 @@ df = pd.DataFrame(data)
 df['timestamp'] = pd.to_datetime(df['timestamp'])
 df = df.sort_values('timestamp').reset_index(drop=True)
 
-print(f"✅ Data geladen! ({len(df)} seconden aan data)")
+print(f"Data geladen! ({len(df)} seconden aan data)")
 
 
 # FTP BEREKENEN (20 Min Rolling Average)
-print("\n🧮 20-minuten piekvermogen zoeken...")
+print("\n20-minuten piekvermogen zoeken...")
 
 df.set_index('timestamp', inplace=True)
 
@@ -62,7 +62,7 @@ print(f"Berekende FTP (95%):       {ftp_waarde:.1f} Watt")
 print("="*40 + "\n")
 
 # Vermogensgrafiek
-print("📈 Grafiek genereren...")
+print("Grafiek genereren...")
 
 plt.figure(figsize=(12, 6))
 
@@ -84,6 +84,6 @@ plt.grid(True, alpha=0.3)
 # Opslaan
 plot_bestand = os.path.join(script_map, "ftp_test_grafiek.png")
 plt.savefig(plot_bestand)
-print(f"✅ Grafiek opgeslagen op:\n   👉 {plot_bestand}")
+print(f"Grafiek opgeslagen op:\n   👉 {plot_bestand}")
 
 plt.show()
