@@ -431,7 +431,7 @@ with tab6:
                     width=1500  
                 )
                 
-                st.plotly_chart(fig_all, use_container_width=True)
+                st.plotly_chart(fig_all, use_container_width=True, config={"scrollZoom": True})
                 
             # MODUS 2: 1 RIT OP DE KAART
             else:
@@ -461,7 +461,7 @@ with tab6:
                     fig_map.update_traces(marker=dict(size=4))
                     fig_map.update_layout(margin={"r":0,"t":40,"l":0,"b":0})
                     
-                    st.plotly_chart(fig_map, use_container_width=True)
+                    st.plotly_chart(fig_map, use_container_width=True, config={"scrollZoom": True})
         else:
             st.warning("Geen GPS data gevonden voor de sporters die je nu in het filter hebt staan.")
     else:
