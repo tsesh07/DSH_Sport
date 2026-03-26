@@ -14,7 +14,6 @@ file_path = pad_robin if os.path.exists(pad_robin) else pad_pieter
 
 print("⚡ Wattbike TCX inladen, momentje...")
 
-# We zoeken dwars door alle ingewikkelde XML namespaces heen
 data = []
 tree = ET.parse(file_path)
 root = tree.getroot()
@@ -39,7 +38,7 @@ df = df.sort_values('timestamp').reset_index(drop=True)
 print(f"✅ Data geladen! ({len(df)} seconden aan data)")
 
 
-# 2. FTP BEREKENEN (20 Min Rolling Average)
+# FTP BEREKENEN (20 Min Rolling Average)
 print("\n🧮 20-minuten piekvermogen zoeken...")
 
 df.set_index('timestamp', inplace=True)
@@ -62,7 +61,7 @@ print(f"Hoogste 20-min gemiddelde: {max_20min_power:.1f} Watt")
 print(f"Berekende FTP (95%):       {ftp_waarde:.1f} Watt")
 print("="*40 + "\n")
 
-# 3. VERMOGENSGRAFIEK PLOTTEN
+# Vermogensgrafiek
 print("📈 Grafiek genereren...")
 
 plt.figure(figsize=(12, 6))
