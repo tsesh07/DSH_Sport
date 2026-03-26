@@ -5,8 +5,7 @@ import numpy as np
 import xml.etree.ElementTree as ET
 import matplotlib.pyplot as plt
 
-# --- 1. Vind alle GPX bestanden ---
-# Let op de '..' aan het begin: we gaan vanuit Verkenningopdracht één map omhoog
+# alle gpx bestanden vinden
 folder_path = os.path.join('..', 'data_hackathon_mrt2026', 'StravaPieter', 'Alle activiteiten', '*.gpx')
 gpx_bestanden = glob.glob(folder_path)
 
@@ -14,7 +13,7 @@ print(f" Bezig met inladen van de {len(gpx_bestanden)} GPX bestanden...")
 
 activiteiten_summary = []
 
-# --- 2. Loop door alle bestanden heen ---
+# loop door alle bestanden
 for file_path in gpx_bestanden:
     try:
         # Parse XML
@@ -51,7 +50,7 @@ for file_path in gpx_bestanden:
         # Tijdsverschil in seconden
         tijd_sec = (df['timestamp'] - df['timestamp'].shift(1)).dt.total_seconds().fillna(0)
         
-        # Totalen berekenen (Stap 3 voor elke activiteit)
+        # Totalen berekenen 
         totale_afstand_km = afstand_m.sum() / 1000
         totale_tijd_uur = tijd_sec.sum() / 3600
         
@@ -68,14 +67,12 @@ for file_path in gpx_bestanden:
                 })
                 
     except Exception as e:
-        # Foutafhandeling voor als 1 gpx bestandje toevallig corrupt is
         pass
 
-# Maak een overzichtstabel (DataFrame)
+# Overzichtstabel (DataFrame)
 df_summary = pd.DataFrame(activiteiten_summary)
 print(f"✅ Klaar! {len(df_summary)} activiteiten succesvol geanalyseerd.\n")
 
-# --- 3. Activiteiten classificeren (Onderdeel van Stap 5) ---
 def bepaal_sport(snelheid):
     if snelheid < 7.5:
         return 'Wandelen'
@@ -84,30 +81,25 @@ def bepaal_sport(snelheid):
     else:
         return 'Wielrennen'
 
-# Maak een nieuwe kolom aan met de voorspelde sport
+# Een nieuwe kolom aan met de voorspelde sport
 df_summary['sport_type'] = df_summary['gem_snelheid_kmh'].apply(bepaal_sport)
 
-# Print even een korte samenvatting in de terminal
 print(df_summary['sport_type'].value_counts())
 print("\n👉 Er opent nu een pop-up venster met het histogram. Sluit dat venster om het script te beëindigen.")
 
-# --- 4. Het Histogram Plotten (Stap 5) ---
+# Histogram
 plt.figure(figsize=(10, 6))
 
-# Kleuren voor de verschillende sporten
 kleuren = {'Wandelen': 'green', 'Hardlopen': 'orange', 'Wielrennen': 'blue'}
 
-# Plot een staafjesgrafiek (histogram) per sport, zodat we mooi de groepen (bulten) zien
 for sport in kleuren.keys():
     subset = df_summary[df_summary['sport_type'] == sport]
     plt.hist(subset['gem_snelheid_kmh'], bins=15, alpha=0.7, label=sport, color=kleuren[sport], edgecolor='black')
 
-# Opmaak van de grafiek
 plt.title('Groepeer de Activiteiten: Histogram van Gemiddelde Snelheden', fontsize=14)
 plt.xlabel('Gemiddelde Snelheid (km/u)', fontsize=12)
 plt.ylabel('Aantal Activiteiten', fontsize=12)
 plt.legend()
 plt.grid(axis='y', alpha=0.75)
 
-# Toon de grafiek in een pop-up venster!
 plt.show()
