@@ -235,7 +235,9 @@ with tab4:
     else:
         st.warning("Te weinig ritten geselecteerd om de AI te trainen. Kies meer sporters in het filter!")
 
+# ------------------------------------------
 # TAB 5: Conditiegroei (Lineaire Regressie)
+# ------------------------------------------
 from sklearn.linear_model import LinearRegression
 
 with tab5:
@@ -266,6 +268,8 @@ with tab5:
             title="Cardiovasculaire Ontwikkeling over Tijd",
             render_mode='svg'
         )
+        
+        fig_reg.update_traces(marker=dict(size=21, opacity=0.6, line=dict(width=1.5, color='DarkSlateGrey')))
 
         # 3. TRAIN HET MODEL PER DOCENT
         for i, docent in enumerate(docenten_met_hartslag):
@@ -293,7 +297,8 @@ with tab5:
                 fig_reg.add_scatter(
                     x=df_docent['Datum'], y=df_docent['Trendlijn'], 
                     mode='lines', name=f"Trend {docent}", 
-                    line=dict(dash='dash') # Maak er een stippellijn van
+                    # VISUELE UPGRADE 2: Maak de trendlijn lekker dik en opvallend
+                    line=dict(dash='dash', width=4) 
                 )
                 
                 # Toon het groeipercentage mooi in de app
@@ -302,6 +307,19 @@ with tab5:
             else:
                 with kolommen[i]:
                     st.metric(label=f"{docent}", value="Te weinig data")
+
+        # Bepaal het absolute minimum en maximum van de data
+        min_y = df_conditie['Efficientie'].min() * 0.90
+        max_y = df_conditie['Efficientie'].max() * 1.10
+        
+        fig_reg.update_layout(
+            height=800, 
+            width =1200,
+            yaxis_range=[min_y, max_y], 
+            yaxis_title="Efficiëntie Score (Snelheid / Hartslag)",
+            xaxis_title="Datum",
+            hovermode="x unified" 
+        )
 
         # Laat de complete grafiek zien
         st.plotly_chart(fig_reg, use_container_width=True)
