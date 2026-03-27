@@ -14,7 +14,7 @@ st.markdown("Welkom bij het officiële Hackathon Dashboard. Hoe ontwikkelen onze
 
 with st.expander("ℹ️ Over de Referentie Dataset (Fister Atleten)"):
     st.markdown("""
-    Om de prestaties van onze docenten in het juiste perspectief te plaatsen, hebben we dit dashboard verrijkt met open-source data van drie externe sporters uit de gerenommeerde *Fister dataset*:
+    Om de prestaties van onze docenten in het juiste perspectief te plaatsen, hebben we dit dashboard verrijkt met open-source data van drie externe sporters uit de *Fister dataset*:
     
     * 🚴‍♂️ **Amateur 6 (Athlete 6):** Man, 41 jaar. Een actieve amateurwielrenner.
     * 🚴‍♂️ **Amateur 7 (Athlete 7):** Man, 22 jaar. Een jonge, fanatieke amateurwielrenner.
