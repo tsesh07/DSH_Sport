@@ -314,7 +314,6 @@ with tab5:
     df_conditie = df_filtered.dropna(subset=['Gem_Snelheid_kmu', 'Gem_Hartslag', 'Datum']).copy()
 
     if not df_conditie.empty:
-        # BEREKEN DE EFFICIËNTIE (Hoe hoger, hoe beter)
         df_conditie['Efficientie'] = df_conditie['Gem_Snelheid_kmu'] / df_conditie['Gem_Hartslag']
         
         # Bereken dagen sinds eerste rit (voor de X-as van het wiskundige model)
@@ -323,18 +322,15 @@ with tab5:
 
         st.markdown("#### 🏆 Groeipercentage per Sporter:")
         
-        # Maak dynamische kolommen voor de statistieken
         docenten_met_hartslag = df_conditie['Docent'].unique()
         kolommen = st.columns(len(docenten_met_hartslag))
         
-        # 🔥 DE FIX: Maak een vast kleurenpalet aan voor deze sporters!
         standaard_kleuren = pc.qualitative.Plotly # Plotly's standaard mooie kleuren
         kleuren_map = {docent: standaard_kleuren[i % len(standaard_kleuren)] for i, docent in enumerate(docenten_met_hartslag)}
 
-        # Basis grafiek met de losse puntjes (nu geforceerd met onze kleuren_map)
         fig_reg = px.scatter(
             df_conditie, x='Datum', y='Efficientie', color='Docent', 
-            color_discrete_map=kleuren_map, # <-- Gebruik het vaste palet
+            color_discrete_map=kleuren_map, 
             hover_data=['Gem_Snelheid_kmu', 'Gem_Hartslag'],
             title="Cardiovasculaire Ontwikkeling over Tijd",
             render_mode='svg'
