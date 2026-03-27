@@ -38,13 +38,22 @@ def load_data():
 
 df = load_data()
 
-# 3. ZIJBALK (FILTERS)
+# 3. ZIJBALK (FILTERS & CREDITS)
 st.sidebar.header("Filter de Data")
 geselecteerde_docenten = st.sidebar.multiselect(
     "Kies Sporters:",
     options=df['Docent'].unique(),
     default=df['Docent'].unique() # Standaard iedereen geselecteerd
 )
+
+st.sidebar.divider() 
+st.sidebar.markdown("### Gemaakt door:")
+st.sidebar.markdown("**Groep 4**") 
+st.sidebar.write("• Sai-Hong Tse")
+st.sidebar.write("• Micha Bakker")
+st.sidebar.write("• Stijn Kooistra")
+st.sidebar.write("• Juri van der Ster")
+st.sidebar.caption("Hackathon 2026 - Data Science")
 
 df_filtered = df[df['Docent'].isin(geselecteerde_docenten)]
 
@@ -149,7 +158,6 @@ with tab3:
     
     with col_links:
         st.markdown("### 📅 Welke dag wordt er gefietst?")
-        # Deze code is extra robuust gemaakt zodat het dataframe niet onverwacht wijzigt
         df_dagen = df_filtered.copy()
         df_dagen['Dag_Nummer'] = df_dagen['Datum'].dt.dayofweek
         dagen_dict = {0:'Ma', 1:'Di', 2:'Wo', 3:'Do', 4:'Vr', 5:'Za', 6:'Zo'}
@@ -418,11 +426,12 @@ with tab6:
                 if len(df_overzicht) > 15000:
                     df_overzicht = df_overzicht.sample(n=15000, random_state=42)
                 
+                # Teken de wereldkaart over de volle breedte
                 fig_all = px.scatter_mapbox(
-                    df_overzicht, lat="lat", lon="lon", color="Docent",
-                    zoom=7, mapbox_style="carto-darkmatter",
-                    title="Overzichtskaart: Actieve Regio's"
-                )
+                df_overzicht, lat="lat", lon="lon", color="Docent",
+                zoom=6, mapbox_style="carto-darkmatter",
+                center={"lat": 52.1326, "lon": 5.2913}  
+        )
                 
                 fig_all.update_traces(marker=dict(size=3, opacity=0.5))
                 fig_all.update_layout(
